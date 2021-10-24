@@ -132,56 +132,51 @@ else if(isset($_GET['movie'])) {
             <tbody>
     HTML;
 
-    if(!empty($_GET['actor'])) {
+    if(!empty($_GET['movie'])) {
     
-        $name = explode(" ", $_GET["actor"]);
-        $first_name = $name[0];
-        $last_name = $name[1];
+        $keywords = explode(" ", $_GET["movie"]);
     }
     else {
-        $first_name = "";
-        $last_name = "";
+        $keywords[0] = "";
     }
     
 
-    // if($empty($name))
-    // {
-        // echo "first name is empty".count($name);
-    // }
+    $query = "select id, title, year
+              from Movie
+              where";
+    $i = 0;
 
-    if(empty($last_name)){
-        $actor_info = $db->prepare("select id, last, first, dob 
-                                    from Actor 
-                                    where lower(first) like ? or lower(last) like ?");
+    foreach($keywords as $keyword)
+    {
+        $keyword = trim($keyword);
+        if($i == 0)
+        {
+            $query .= " title like '%$keyword%'";
+        }
+        else
+        {
+            $query .= " and title like '%$keyword%'";
+        }
 
-        $actor_info->bind_param('ss', strtolower('%'.$first_name.'%'),
-                                    strtolower('%'.$first_name.'%'));
-    } else {
-        $actor_info = $db->prepare("select id, last, first, dob 
-                                    from Actor 
-                                    where (lower(first) like ? or lower(last) like ?) and lower(last) like ?");
-
-        $actor_info->bind_param('sss', strtolower('%'.$first_name.'%'),
-                                    strtolower('%'.$first_name.'%'),
-                                    strtolower('%'.$last_name.'%'));
+        $i++;
     }
-    $actor_info->execute();
-    $actor_info->bind_result($aid, $last, $first, $dob);
-    $actor_info->store_result();
 
-    while($actor_info->fetch()) {
+    $rs = $db->query($query);
+
+
+    while($row = $rs->fetch_assoc()) {
         echo "<tr>";
-        echo "<td><a href=\"actor.php?id=".$aid."\">";
-        echo $first.' '.$last;
+        echo "<td><a href=\"movie.php?id=".$row['id']."\">";
+        echo $row['title'];
         echo "</a></td>";
 
-        echo "<td><a href=\"actor.php?id=".$aid."\">";
-        echo $dob;
+        echo "<td><a href=\"actor.php?id=".$row['id']."\">";
+        echo $row['year'];
         echo "</a></td></tr>";
         
     }
 
-    $actor_info->close();
+    $rs->free();
 
     echo "</tbody></table>";
 }
